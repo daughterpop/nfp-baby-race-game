@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌸 NFP Baby Card Game 🌸</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap');
+        
+        :root {
+            --tw-color-primary: #10b981;
+        }
+        
+        .card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        
+        .card-back {
+            backface-visibility: hidden;
+        }
+        
+        .card.flipped .card-front {
+            transform: rotateY(180deg);
+        }
+        
+        .card.flipped .card-back {
+            transform: rotateY(180deg);
+        }
+        
+        .deck-stack {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .baby-pop {
+            animation: babyPop 0.6s ease-out forwards;
+        }
+        
+        @keyframes babyPop {
+            0% { transform: scale(0.2); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        .roll-animation {
+            animation: rollDice 0.8s ease-in-out;
+        }
+        
+        @keyframes rollDice {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.1); }
+            50% { transform: rotate(180deg) scale(0.9); }
+            75% { transform: rotate(270deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        
+        .pregnant-pulse {
+            animation: pregnantPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pregnantPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-emerald-950 via-teal-950 to-cyan-950 text-white font-mono">
+    <div class="max-w-6xl mx-auto p-6">
+        <!-- HEADER -->
+        <div class="flex items-center justify-between mb-8 border-b border-emerald-400 pb-4">
+            <div class="flex items-center gap-4">
+                <div class="text-5xl">🌸</div>
+                <div>
+                    <h1 class="text-4xl font-bold tracking-widest" style="font-family: 'Press Start 2P', system-ui;">
+                        NFP BABY RACE
+                    </h1>
+                    <p class="text-emerald-300 text-sm">Natural Family Planning • 12 cycles per year • Pregnancy = 9-cycle wait</p>
+                </div>
+                <div class="text-5xl">👶</div>
+            </div>
+            
+            <div class="flex items-center gap-6 text-sm">
+                <div onclick="showRules()" class="cursor-pointer flex items-center gap-2 hover:text-emerald-300 transition-colors">
+                    <span class="text-2xl">📜</span>
+                    <span class="font-medium">HOW TO PLAY + NFP INFO</span>
+                </div>
+                <a href="#" onclick="copyGameLink(); return false;" 
+                   class="px-4 py-2 bg-white text-emerald-900 rounded-xl font-medium flex items-center gap-2 hover:bg-emerald-200 transition-colors">
+                    <span>🔗</span>
+                    SHARE THIS GAME
+                </a>
+                <div class="text-xs bg-emerald-900/50 px-3 py-1 rounded-2xl flex items-center gap-1">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    28-CARD DECK
+                </div>
+            </div>
+        </div>
+
+        <!-- SETUP SCREEN -->
+        <div id="setup-screen">
+            <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-emerald-300/30">
+                <h2 class="text-3xl font-bold text-center mb-6">Build Your Family Legacy</h2>
+                
+                <div class="max-w-2xl mx-auto grid grid-cols-2 gap-8">
+                    <!-- Players -->
+                    <div>
+                        <label class="block text-emerald-300 text-sm mb-2">Number of Couples (2–4)</label>
+                        <div class="flex gap-3 mb-6">
+                            <button onclick="setPlayerCount(2)" 
+                                    class="player-count-btn flex-1 py-4 rounded-2xl text-xl font-bold bg-emerald-600 hover:bg-emerald-500 transition-all active:scale-95">2</button>
+                            <button onclick="setPlayerCount(3)" 
+                                    class="player-count-btn flex-1 py-4 rounded-2xl text-xl font-bold bg-emerald-600 hover:bg-emerald-500 transition-all active:scale-95">3</button>
+                            <button onclick="setPlayerCount(4)" 
+                                    class="player-count-btn flex-1 py-4 rounded-2xl text-xl font-bold bg-emerald-600 hover:bg-emerald-500 transition-all active:scale-95">4</button>
+                        </div>
+
+                        <div id="player-names" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Fertile years -->
+                    <div>
+                        <label class="block text-emerald-300 text-sm mb-2">Length of fertile years</label>
+                        <div class="flex flex-wrap gap-3 mb-2" id="years-options">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div id="years-display" class="text-center text-emerald-400 text-sm font-medium mt-4 bg-white/10 rounded-2xl py-3">
+                            5 years = 60 cycles
+                        </div>
+                        <p class="text-xs text-emerald-400/70 mt-3 text-center">
+                            12 cycles per year (realistic monthly cycles)<br>
+                            Get pregnant → 9-cycle wait while others keep trying
+                        </p>
+                    </div>
+                </div>
+
+                <button onclick="startGame()" 
+                        class="w-full mt-10 py-6 bg-gradient-to-r from-emerald-400 to-teal-400 text-emerald-950 text-2xl font-bold rounded-3xl hover:brightness-110 transition-all active:scale-95 shadow-xl shadow-emerald-500/50">
+                    SHUFFLE THE DECK &amp; START TRYING →
+                </button>
+            </div>
+            
+            <div class="text-center mt-8 text-emerald-400 text-xs flex items-center justify-center gap-6">
+                <div>🎲 28 unique cycle cards</div>
+                <div>📆 12 cycles / year</div>
+                <div>🤰 9-cycle pregnancy wait</div>
+                <div>👶 Twins &amp; triplets possible!</div>
+            </div>
+        </div>
+
+        <!-- GAME SCREEN -->
+        <div id="game-screen" class="hidden">
+            
+            <!-- GAME HEADER -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <span id="round-display" class="text-3xl font-bold text-emerald-300">CYCLE 1 / 60</span>
+                        <span id="year-display" class="text-xs bg-teal-900 px-3 py-1 rounded-3xl">YEAR 1 • AGES 20–21</span>
+                    </div>
+                </div>
+                
+                <div class="flex gap-8" id="players-leaderboard"></div>
+                
+                <div onclick="endGameEarly()" class="cursor-pointer text-red-400 hover:text-red-300 flex items-center text-sm font-medium">
+                    <span class="text-xl mr-1">⏹️</span> END GAME
+                </div>
+            </div>
+
+            <!-- DECK -->
+            <div class="flex justify-center mb-8">
+                <div onclick="if(!gameEnded) dealCards()" 
+                     id="deck-area"
+                     class="deck-stack cursor-pointer relative w-40 h-56 bg-gradient-to-br from-amber-900 to-yellow-800 rounded-3xl border-8 border-amber-950 shadow-2xl flex flex-col items-center justify-center text-6xl">
+                    <div class="text-8xl mb-2">🌸</div>
+                    <div class="text-xl font-bold text-amber-200 tracking-widest">28-CARD DECK</div>
+                    <div id="deck-count" class="text-xs bg-amber-950 text-amber-300 px-4 py-1 rounded-2xl mt-4">SHUFFLED • READY</div>
+                    <div class="absolute -top-2 -right-2 bg-emerald-400 text-emerald-950 text-xs font-bold px-3 py-1 rounded-2xl rotate-12 shadow-md">DRAW HERE</div>
+                </div>
+            </div>
+
+            <!-- PLAYERS AREA -->
+            <div id="players-area" class="grid grid-cols-2 lg:grid-cols-4 gap-6"></div>
+
+            <!-- ROUND CONTROLS -->
+            <div class="flex justify-center gap-4 mt-10">
+                <button onclick="dealCards()" 
+                        id="deal-button"
+                        class="px-10 py-4 bg-white text-emerald-950 font-bold text-xl rounded-3xl hover:bg-amber-200 transition-all flex items-center gap-3 shadow-lg">
+                    <span class="text-3xl">🔀</span>
+                    DRAW NEW CYCLE CARDS
+                </button>
+                
+                <button onclick="advanceCycle()" 
+                        id="next-button"
+                        class="hidden px-10 py-4 bg-gradient-to-r from-teal-400 to-cyan-400 text-emerald-950 font-bold text-xl rounded-3xl hover:brightness-110 transition-all flex items-center gap-3 shadow-lg">
+                    NEXT CYCLE →
+                </button>
+            </div>
+
+            <div class="text-center text-xs text-emerald-400/70 mt-4">
+                Only couples who are currently trying draw a card each cycle.<br>
+                Pregnancy = 9 cycles off (realistic 9-month wait) while others keep going!
+            </div>
+        </div>
+    </div>
+
+    <!-- RULES MODAL -->
+    <div onclick="if(event.target.id === 'rules-modal') hideRules()" 
+         id="rules-modal"
+         class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="bg-emerald-950 max-w-2xl w-full mx-4 rounded-3xl p-8 border border-emerald-400">
+            <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                <span>🌸</span> HOW TO PLAY – NFP BABY CARD GAME
+            </h2>
+            
+            <div class="space-y-8 text-emerald-100">
+                <div>
+                    <h3 class="font-bold text-lg mb-2">📋 GAME GOAL</h3>
+                    <p class="text-sm">Couples compete over your chosen fertile years (5–25). 12 cycles per year. Whoever has the MOST babies at the end wins!</p>
+                </div>
+                
+                <div>
+                    <h3 class="font-bold text-lg mb-2">🃏 THE 28-CARD DECK</h3>
+                    <p class="text-sm mb-3">Cards represent real NFP observations (mucus, temperature, etc.):</p>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="bg-white/10 p-3 rounded-2xl flex gap-3 items-center">
+                            <span class="text-4xl">🌵</span>
+                            <div>
+                                <div class="font-bold">Infertile (14 cards)</div>
+                                <div class="text-emerald-400">10% chance of baby</div>
+                            </div>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-2xl flex gap-3 items-center">
+                            <span class="text-4xl">🌱</span>
+                            <div>
+                                <div class="font-bold">Low fertility (6 cards)</div>
+                                <div class="text-emerald-400">25% chance of baby</div>
+                            </div>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-2xl flex gap-3 items-center">
+                            <span class="text-4xl">🌸</span>
+                            <div>
+                                <div class="font-bold">Medium fertility (5 cards)</div>
+                                <div class="text-emerald-400">45% chance of baby</div>
+                            </div>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-2xl flex gap-3 items-center">
+                            <span class="text-4xl">🥚</span>
+                            <div>
+                                <div class="font-bold">Peak fertility (3 cards)</div>
+                                <div class="text-emerald-400">70% chance of baby</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-bold text-lg mb-2">🤰 PREGNANCY &amp; TIMING</h3>
+                    <ul class="list-disc list-inside space-y-2 text-sm">
+                        <li>Only couples who are currently TRYING draw a card each cycle</li>
+                        <li>If you conceive → you are pregnant for the next 9 cycles (realistic ~9 months)</li>
+                        <li>During those 9 cycles you skip drawing while other couples keep trying</li>
+                        <li>After 9 cycles the baby is born and you can start trying again</li>
+                        <li>Twins (4% chance) or triplets (0.5% chance) possible on any conception roll!</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-bold text-lg mb-2">🎲 HOW EACH CYCLE WORKS</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-sm">
+                        <li>Shuffle the 28-card deck</li>
+                        <li>Each TRYING couple draws ONE unique card</li>
+                        <li>Flip → roll for conception that cycle</li>
+                        <li>Advance to next cycle → births happen automatically if due</li>
+                        <li>Repeat for all 12×chosen-years cycles</li>
+                    </ol>
+                </div>
+                
+                <div class="bg-teal-900/50 p-5 rounded-2xl text-sm">
+                    <strong>Real NFP note:</strong> This simulates couples timing intercourse during the fertile window each cycle. Pregnancy pauses trying for ~9 months — exactly like real life!
+                </div>
+            </div>
+            
+            <button onclick="hideRules()" 
+                    class="mt-8 w-full py-4 bg-emerald-400 text-emerald-950 font-bold rounded-3xl text-xl">GOT IT — LET’S START TRYING!</button>
+        </div>
+    </div>
+
+    <!-- WINNER / FAMILY NAMING MODAL -->
+    <div onclick="if(event.target.id === 'winner-modal') hideWinner()" 
+         id="winner-modal"
+         class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="bg-gradient-to-br from-yellow-300 to-amber-300 text-emerald-950 max-w-4xl w-full mx-4 rounded-3xl p-8 max-h-[90vh] overflow-auto">
+            <div id="winner-content"></div>
+            
+            <div class="flex gap-4 justify-center mt-10">
+                <button onclick="restartGame()" 
+                        class="flex-1 py-6 bg-emerald-900 text-white rounded-3xl text-xl font-bold">PLAY AGAIN</button>
+                <button onclick="hideWinner()" 
+                        class="flex-1 py-6 bg-transparent border-2 border-emerald-900 rounded-3xl text-xl font-bold">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind initialization
+        function initTailwind() {
+            return {
+                config(userConfig = {}) {
+                    return {
+                        content: [],
+                        theme: {
+                            extend: {},
+                        },
+                        plugins: [],
+                        ...userConfig,
+                    }
+                },
+                theme: {
+                    extend: {},
+                },
+            }
+        }
+        
+        // Game data
+        let players = []
+        let currentCycle = 1
+        let totalCycles = 60
+        let fertileYears = 5
+        let deckTemplate = []
+        let currentDeck = []
+        let gameEnded = false
+        
+        // Build the 28-card deck
+        function buildDeck() {
+            deckTemplate = []
+            
+            // Infertile - 14
+            for (let i = 1; i <= 14; i++) {
+                deckTemplate.push({
+                    id: `infertile-${i}`,
+                    type: 'infertile',
+                    emoji: '🌵',
+                    name: `Dry Day #${i}`,
+                    desc: 'No fertility signs',
+                    chance: 10,
+                    color: 'from-gray-600 to-slate-700'
+                })
+            }
+            
+            // Low - 6
+            for (let i = 1; i <= 6; i++) {
+                deckTemplate.push({
+                    id: `low-${i}`,
+                    type: 'low',
+                    emoji: '🌱',
+                    name: `Sticky Signs #${i}`,
+                    desc: 'Early hints only',
+                    chance: 25,
+                    color: 'from-emerald-600 to-teal-700'
+                })
+            }
+            
+            // Medium - 5
+            for (let i = 1; i <= 5; i++) {
+                deckTemplate.push({
+                    id: `medium-${i}`,
+                    type: 'medium',
+                    emoji: '🌸',
+                    name: `Creamy Window #${i}`,
+                    desc: 'Fertility building',
+                    chance: 45,
+                    color: 'from-pink-500 to-rose-600'
+                })
+            }
+            
+            // Peak - 3
+            for (let i = 1; i <= 3; i++) {
+                deckTemplate.push({
+                    id: `peak-${i}`,
+                    type: 'peak',
+                    emoji: '🥚',
+                    name: `PEAK OVULATION #${i}`,
+                    desc: 'Prime fertile time!',
+                    chance: 70,
+                    color: 'from-amber-400 to-yellow-500'
+                })
+            }
+        }
+        
+        // Shuffle
+        function shuffle(array) {
+            const newArray = [...array]
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1))
+                ;[newArray[i], newArray[j]] = [newArray[j], newArray[i]]
+            }
+            return newArray
+        }
+        
+        // Set player count
+        function setPlayerCount(count) {
+            document.querySelectorAll('.player-count-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-offset-4', 'ring-emerald-400')
+            })
+            const buttons = document.querySelectorAll('.player-count-btn')
+            buttons[count - 2].classList.add('ring-4', 'ring-offset-4', 'ring-emerald-400')
+            
+            const container = document.getElementById('player-names')
+            container.innerHTML = ''
+            
+            const defaultNames = ['The Smiths', 'The Garcias', 'The Patels', 'The Dubois']
+            for (let i = 1; i <= count; i++) {
+                const div = document.createElement('div')
+                div.className = 'flex items-center gap-4 bg-white/10 backdrop-blur rounded-2xl p-4'
+                div.innerHTML = `
+                    <div class="w-8 h-8 bg-emerald-400 text-emerald-950 rounded-2xl flex items-center justify-center font-bold">${i}</div>
+                    <input id="player-input-${i}" 
+                           type="text" 
+                           value="${defaultNames[i-1] || 'The Johnsons'}" 
+                           class="flex-1 bg-transparent border border-emerald-400/30 focus:border-emerald-400 rounded-2xl px-5 py-4 text-lg outline-none">
+                    <div class="text-xs text-emerald-400">couple</div>
+                `
+                container.appendChild(div)
+            }
+        }
+        
+        // Populate years
+        function populateYears() {
+            const container = document.getElementById('years-options')
+            container.innerHTML = ''
+            const options = [5,10,15,20,25]
+            options.forEach(years => {
+                const btn = document.createElement('button')
+                btn.className = `flex-1 py-4 rounded-2xl text-xl font-bold transition-all ${years === 5 ? 'bg-emerald-600 ring-4 ring-offset-4 ring-emerald-400' : 'bg-emerald-600 hover:bg-emerald-500'}`
+                btn.textContent = `${years} years`
+                btn.onclick = () => {
+                    fertileYears = years
+                    totalCycles = years * 12
+                    document.querySelectorAll('#years-options button').forEach(b => b.classList.remove('ring-4', 'ring-offset-4', 'ring-emerald-400'))
+                    btn.classList.add('ring-4', 'ring-offset-4', 'ring-emerald-400')
+                    updateYearsDisplay()
+                }
+                container.appendChild(btn)
+            })
+        }
+        
+        function updateYearsDisplay() {
+            const display = document.getElementById('years-display')
+            display.innerHTML = `${fertileYears} years = ${totalCycles} cycles`
+        }
+        
+        // Start game
+        function startGame() {
+            players = []
+            for (let i = 1; i <= 4; i++) {
+                const input = document.getElementById(`player-input-${i}`)
+                if (input) {
+                    players.push({
+                        id: i,
+                        name: input.value.trim() || `Couple ${i}`,
+                        babies: 0,
+                        babyNames: [],
+                        pregnancyCyclesLeft: 0,
+                        pendingNumBabies: 0,
+                        currentCard: null,
+                        currentOutcome: null,
+                        history: []
+                    })
+                }
+            }
+            
+            if (players.length < 2) return
+            
+            buildDeck()
+            currentCycle = 1
+            gameEnded = false
+            
+            document.getElementById('setup-screen').classList.add('hidden')
+            document.getElementById('game-screen').classList.remove('hidden')
+            
+            renderLeaderboard()
+            renderPlayersArea()
+            
+            setTimeout(() => dealCards(), 600)
+        }
+        
+        function renderLeaderboard() {
+            const container = document.getElementById('players-leaderboard')
+            container.innerHTML = ''
+            players.forEach(player => {
+                let extra = ''
+                if (player.pregnancyCyclesLeft > 0) {
+                    extra = `<span class="text-amber-300 text-lg ml-2">🤰</span>`
+                }
+                const div = document.createElement('div')
+                div.className = 'flex flex-col items-center'
+                div.innerHTML = `
+                    <div class="text-xs text-emerald-400 mb-1">${player.name}</div>
+                    <div class="flex items-center gap-1 text-4xl">
+                        ${'👶'.repeat(player.babies)}
+                        <span class="text-2xl font-bold">${player.babies}</span>
+                        ${extra}
+                    </div>
+                `
+                container.appendChild(div)
+            })
+        }
+        
+        function renderPlayersArea() {
+            const container = document.getElementById('players-area')
+            container.innerHTML = ''
+            
+            players.forEach((player, pIndex) => {
+                let slotHTML = ''
+                
+                if (player.pregnancyCyclesLeft > 0) {
+                    // Pregnant state
+                    const due = player.pregnancyCyclesLeft
+                    let babiesEmoji = '👶'
+                    if (player.pendingNumBabies === 2) babiesEmoji = '👶👶'
+                    if (player.pendingNumBabies === 3) babiesEmoji = '👶👶👶'
+                    slotHTML = `
+                    <div class="w-40 h-56 mx-auto flex flex-col items-center justify-center bg-gradient-to-br from-pink-400 to-rose-400 text-emerald-950 rounded-3xl border-8 border-white/30 shadow-2xl pregnant-pulse">
+                        <div class="text-7xl mb-2">${babiesEmoji}</div>
+                        <div class="font-bold text-2xl text-center">PREGNANT!</div>
+                        <div class="text-xl mt-3">${due} cycles until birth</div>
+                        <div class="text-xs mt-6 opacity-75">🤰 skipping draws</div>
+                    </div>`
+                } else if (player.currentCard) {
+                    // Card slot
+                    slotHTML = `
+                    <div onclick="flipCard(${pIndex})" id="player-card-${pIndex}" class="card w-40 h-56 mx-auto cursor-pointer relative">
+                        <div class="card-back absolute inset-0 bg-gradient-to-br from-amber-900 to-yellow-800 rounded-3xl border-8 border-amber-950 shadow-2xl flex flex-col items-center justify-center text-6xl">
+                            🌸
+                            <div class="text-xl mt-6 font-bold tracking-widest text-amber-100">NFP CYCLE</div>
+                        </div>
+                        <div class="card-front absolute inset-0 rounded-3xl border-8 border-white/30 shadow-2xl flex flex-col items-center justify-center bg-gradient-to-br ${player.currentCard.color} text-center rotate-y-180">
+                            <div class="text-7xl mb-3">${player.currentCard.emoji}</div>
+                            <div class="font-bold text-2xl">${player.currentCard.name}</div>
+                            <div class="text-sm opacity-80">${player.currentCard.desc}</div>
+                            <div class="mt-6 text-4xl font-bold">${player.currentCard.chance}%</div>
+                            <div class="text-xs tracking-widest">CHANCE THIS CYCLE</div>
+                        </div>
+                    </div>`
+                } else {
+                    // Empty slot
+                    slotHTML = `
+                    <div class="w-40 h-56 border-2 border-dashed border-emerald-400/40 rounded-3xl flex flex-col items-center justify-center text-emerald-400/40 text-center">
+                        <div class="text-5xl mb-3">🌸</div>
+                        <div class="text-sm">Waiting for cycle draw</div>
+                    </div>`
+                }
+                
+                const outcomeHTML = player.currentOutcome && player.pregnancyCyclesLeft === 0 ? `
+                    <div class="baby-pop inline-flex flex-col items-center mt-4">
+                        ${player.currentOutcome.pregnant ? 
+                            `<div class="text-7xl">${player.currentOutcome.numBabies === 3 ? '👶👶👶' : player.currentOutcome.numBabies === 2 ? '👶👶' : '👶'}</div>
+                            <div class="text-teal-400 font-bold text-xl">
+                                ${player.currentOutcome.numBabies === 3 ? 'TRIPLETS!' : player.currentOutcome.numBabies === 2 ? 'TWINS!' : 'BABY!'}
+                            </div>
+                            <div class="text-xs opacity-70 mt-1">Pregnant • due in 9 cycles</div>` : 
+                            `<div class="text-5xl mb-3">😕</div><div class="text-amber-400 font-bold">Not this cycle</div>`
+                        }
+                    </div>` : ''
+                
+                const playerHTML = `
+                <div class="bg-white/10 backdrop-blur-xl border border-emerald-400/30 rounded-3xl p-6 flex flex-col">
+                    <div class="flex justify-between mb-4">
+                        <div class="font-bold text-xl">${player.name}</div>
+                        <div class="text-4xl">${'👶'.repeat(player.babies)}</div>
+                    </div>
+                    
+                    <div id="card-slot-${pIndex}" class="relative min-h-[220px] flex items-center justify-center mb-6">
+                        ${slotHTML}
+                    </div>
+                    
+                    <div id="outcome-${pIndex}" class="min-h-[100px] text-center">
+                        ${outcomeHTML}
+                    </div>
+                </div>`
+                
+                container.innerHTML += playerHTML
+            })
+        }
+        
+        // Deal only to trying players
+        function dealCards() {
+            if (gameEnded || currentCycle > totalCycles) return
+            
+            const tryingPlayers = players.filter(p => p.pregnancyCyclesLeft === 0)
+            if (tryingPlayers.length === 0) {
+                // Everyone pregnant — just advance
+                document.getElementById('next-button').classList.remove('hidden')
+                document.getElementById('deal-button').classList.add('hidden')
+                return
+            }
+            
+            currentDeck = shuffle(deckTemplate)
+            
+            players.forEach(player => {
+                if (player.pregnancyCyclesLeft === 0 && currentDeck.length > 0) {
+                    player.currentCard = currentDeck.shift()
+                    player.currentOutcome = null
+                }
+            })
+            
+            renderPlayersArea()
+            document.getElementById('deal-button').classList.add('hidden')
+            document.getElementById('next-button').classList.remove('hidden')
+        }
+        
+        // Flip and roll (only for trying players with card)
+        function flipCard(playerIndex) {
+            const player = players[playerIndex]
+            if (!player.currentCard || player.currentOutcome || player.pregnancyCyclesLeft > 0) return
+            
+            const cardEl = document.getElementById(`player-card-${playerIndex}`)
+            if (cardEl) cardEl.classList.add('flipped')
+            
+            const outcomeDiv = document.getElementById(`outcome-${playerIndex}`)
+            outcomeDiv.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <div id="roll-text-${playerIndex}" class="roll-animation text-5xl mb-4">🎲</div>
+                    <div class="text-emerald-400 font-medium">Rolling for conception…</div>
+                </div>`
+            
+            setTimeout(() => {
+                const roll = Math.random() * 100
+                const pregnant = roll < player.currentCard.chance
+                
+                let numBabies = 1
+                if (pregnant) {
+                    const multiRoll = Math.random()
+                    if (multiRoll < 0.04) numBabies = 2     // 4% twins
+                    else if (multiRoll < 0.045) numBabies = 3 // 0.5% triplets
+                }
+                
+                if (pregnant) {
+                    player.currentOutcome = {
+                        pregnant: true,
+                        numBabies: numBabies
+                    }
+                    player.pregnancyCyclesLeft = 9
+                    player.pendingNumBabies = numBabies
+                } else {
+                    player.currentOutcome = { pregnant: false }
+                }
+                
+                // Save history
+                player.history.push({
+                    cycle: currentCycle,
+                    card: player.currentCard,
+                    outcome: player.currentOutcome
+                })
+                
+                renderPlayersArea()
+                renderLeaderboard()
+                
+                // Check if all trying players have revealed
+                const trying = players.filter(p => p.pregnancyCyclesLeft === 0)
+                const allRevealed = trying.every(p => p.currentOutcome !== null)
+                if (allRevealed) {
+                    document.getElementById('next-button').classList.remove('hidden')
+                }
+            }, 900)
+        }
+        
+        // Advance to next cycle: process births, then auto-prepare next deal
+        function advanceCycle() {
+            if (gameEnded) return
+            
+            currentCycle++
+            
+            // Process births at the START of the new cycle
+            players.forEach(player => {
+                if (player.pregnancyCyclesLeft > 0) {
+                    player.pregnancyCyclesLeft--
+                    if (player.pregnancyCyclesLeft === 0) {
+                        player.babies += player.pendingNumBabies
+                        player.pendingNumBabies = 0
+                    }
+                }
+            })
+            
+            renderLeaderboard()
+            renderPlayersArea()
+            
+            if (currentCycle > totalCycles) {
+                gameEnded = true
+                showWinner()
+                return
+            }
+            
+            // Clear old cards/outcomes
+            players.forEach(p => {
+                if (p.pregnancyCyclesLeft === 0) {
+                    p.currentCard = null
+                    p.currentOutcome = null
+                }
+            })
+            
+            // Auto-deal for the new cycle
+            document.getElementById('next-button').classList.add('hidden')
+            document.getElementById('deal-button').classList.remove('hidden')
+            
+            // Update display
+            updateCycleDisplay()
+            
+            // Deal immediately for the new cycle
+            dealCards()
+        }
+        
+        function updateCycleDisplay() {
+            const yearNum = Math.ceil(currentCycle / 12)
+            const ageStart = 19 + yearNum
+            document.getElementById('round-display').innerHTML = `CYCLE <span class="text-white">${currentCycle}</span> / ${totalCycles}`
+            document.getElementById('year-display').innerHTML = `YEAR ${yearNum} • AGES ${ageStart}–${ageStart + 1}`
+        }
+        
+        function showWinner() {
+            // Auto-birth any remaining pregnancies at game end
+            players.forEach(p => {
+                if (p.pregnancyCyclesLeft > 0) {
+                    p.babies += p.pendingNumBabies
+                    p.pregnancyCyclesLeft = 0
+                    p.pendingNumBabies = 0
+                }
+            })
+            
+            const modal = document.getElementById('winner-modal')
+            const content = document.getElementById('winner-content')
+            
+            let maxBabies = 0
+            players.forEach(p => { if (p.babies > maxBabies) maxBabies = p.babies })
+            const winners = players.filter(p => p.babies === maxBabies)
+            
+            let html = `
+                <div class="text-7xl mb-4">🏆</div>
+                <h2 class="text-5xl font-bold mb-2">YOUR FAMILIES ARE COMPLETE!</h2>
+                <p class="text-2xl mb-8">After ${totalCycles} cycles (${fertileYears} years) of NFP trying…</p>
+            `
+            
+            if (winners.length === 1) {
+                html += `
+                    <div class="text-4xl mb-6">${winners[0].name} HAD THE MOST BABIES!</div>
+                    <div class="flex justify-center text-8xl mb-8">${'👶'.repeat(winners[0].babies)}</div>
+                    <div class="text-6xl font-bold mb-8">${winners[0].babies} kids</div>
+                `
+            } else {
+                html += `<div class="text-3xl mb-8">IT'S A TIE!</div>`
+                winners.forEach(w => {
+                    html += `<div class="flex items-center justify-center gap-4 text-4xl mb-4">${w.name} — ${'👶'.repeat(w.babies)} <span class="text-5xl">${w.babies}</span></div>`
+                })
+            }
+            
+            // Baby naming
+            html += `<div class="mt-12 mb-8 text-3xl font-bold text-center">Name your babies!</div>`
+            html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">`
+            
+            players.forEach((player, index) => {
+                html += `
+                <div class="bg-white/20 rounded-3xl p-6">
+                    <div class="font-bold text-xl mb-4">${player.name} — ${player.babies} kids</div>
+                    <div class="space-y-3">`
+                
+                for (let i = 1; i <= player.babies; i++) {
+                    html += `
+                    <div class="flex items-center gap-3 bg-white/30 rounded-2xl p-3">
+                        <span class="text-3xl">👶</span>
+                        <input id="baby-name-${index}-${i}" 
+                               type="text" 
+                               value="${player.babyNames[i-1] || `Baby #${i}`}" 
+                               onchange="updateBabyName(${index}, ${i}, this.value)"
+                               class="flex-1 bg-transparent border border-emerald-400/30 focus:border-emerald-400 rounded-2xl px-4 py-3 text-lg outline-none text-emerald-950">
+                    </div>`
+                }
+                
+                if (player.babies === 0) {
+                    html += `<div class="text-emerald-400 italic">No babies… better luck next game!</div>`
+                }
+                
+                html += `</div></div>`
+            })
+            
+            html += `</div>`
+            
+            const totalBabies = players.reduce((sum, p) => sum + p.babies, 0)
+            html += `
+                <div class="mt-10 text-center text-sm bg-white/20 rounded-2xl p-5">
+                    Total babies born: <span class="font-bold">${totalBabies}</span>
+                </div>
+                <div class="text-xs mt-8 opacity-70 text-center">Thanks for playing the NFP Baby Card Game!<br>Real couples using NFP can track fertile windows with high accuracy.</div>
+            `
+            
+            content.innerHTML = html
+            modal.classList.remove('hidden')
+            modal.classList.add('flex')
+        }
+        
+        window.updateBabyName = function(playerIndex, babyIndex, name) {
+            if (!players[playerIndex].babyNames) players[playerIndex].babyNames = []
+            players[playerIndex].babyNames[babyIndex - 1] = name
+        }
+        
+        function hideWinner() {
+            const modal = document.getElementById('winner-modal')
+            modal.classList.add('hidden')
+            modal.classList.remove('flex')
+        }
+        
+        function showRules() {
+            document.getElementById('rules-modal').classList.remove('hidden')
+            document.getElementById('rules-modal').classList.add('flex')
+        }
+        
+        function hideRules() {
+            const modal = document.getElementById('rules-modal')
+            modal.classList.add('hidden')
+            modal.classList.remove('flex')
+        }
+        
+        function endGameEarly() {
+            if (confirm('End the game now? Any ongoing pregnancies will still birth.')) {
+                gameEnded = true
+                showWinner()
+            }
+        }
+        
+        function restartGame() {
+            hideWinner()
+            players = []
+            currentCycle = 1
+            gameEnded = false
+            document.getElementById('game-screen').classList.add('hidden')
+            document.getElementById('setup-screen').classList.remove('hidden')
+            document.querySelectorAll('.player-count-btn').forEach(btn => btn.classList.remove('ring-4', 'ring-offset-4', 'ring-emerald-400'))
+        }
+        
+        function copyGameLink() {
+            const message = `🎉 Copy the entire code below and save as "nfp-baby-game.html"!\n\nOpen in any browser (works offline). Share with friends — now with realistic 12 cycles/year + 9-cycle pregnancy waits + twins/triplets!`
+            alert(message)
+            const fullHTML = document.documentElement.outerHTML
+            navigator.clipboard.writeText(fullHTML).then(() => {
+                console.log('%c✅ Full game HTML copied to clipboard!', 'background:#10b981;color:white;padding:4px 8px;border-radius:4px')
+            })
+        }
+        
+        // Initialize
+        window.onload = function() {
+            initTailwind()
+            populateYears()
+            updateYearsDisplay()
+            setPlayerCount(2)
+            console.log('%c🌸 NFP Baby Card Game v3 ready! 12 cycles/year • 9-cycle pregnancy wait • twins & triplets!', 'font-size:18px;color:#10b981')
+        }
+    </script>
+</body>
+</html>
